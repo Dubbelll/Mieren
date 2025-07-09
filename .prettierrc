@@ -1,0 +1,9 @@
+{
+	"useTabs": true,
+	"tabWidth": 4,
+	"singleQuote": true,
+	"quoteProps": "consistent",
+	"semi": false,
+	"htmlWhitespaceSensitivity": "ignore",
+	"printWidth": 100
+}

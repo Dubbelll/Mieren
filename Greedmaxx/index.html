@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="shortcut icon" href="data:," />
+		<title>Greedmaxx</title>
+	</head>
+	<body>
+		<div id="info">
+			<div id="p1" class="player p1"></div>
+			<div id="turn"></div>
+			<div id="p2" class="player p2"></div>
+		</div>
+		<div id="grid"></div>
+
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+				font-family: Supreme;
+				font-size: 16px;
+			}
+
+			:root {
+				--black1: #0c0c0c;
+				--white1: #f2f2f2;
+			}
+
+			body {
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+				width: 100svmin;
+				height: 100svh;
+				padding: 16px;
+			}
+
+			#info {
+				display: flex;
+				justify-content: space-between;
+				gap: 8px;
+				width: 100%;
+			}
+
+			#turn,
+			.player {
+				padding: 8px;
+
+				&.p1 {
+					background-color: yellow;
+				}
+
+				&.p2 {
+					background-color: magenta;
+				}
+			}
+
+			#grid {
+				display: grid;
+				grid-template-columns: repeat(9, 1fr);
+				gap: 4px;
+				aspect-ratio: 1;
+				width: 100%;
+				background-color: black;
+				border: 4px solid black;
+			}
+
+			.cell {
+				position: relative;
+				display: flex;
+				aspect-ratio: 1;
+				background-color: white;
+				border: none;
+
+				&.p1 {
+					background-color: yellow;
+				}
+
+				&.p2 {
+					background-color: magenta;
+				}
+
+				&.highlight {
+					background-color: cyan;
+				}
+			}
+		</style>
+
+		<script>
+			let match = generateMatch(9)
+			let selection = undefined
+
+			let turnElement = document.getElementById('turn')
+			let p1Element = document.getElementById('p1')
+			let p2Element = document.getElementById('p2')
+			let gridElement = document.getElementById('grid')
+
+			updateInfo()
+
+			for (const cell of match.grid.cells) {
+				const cellElement = document.createElement('button')
+
+				cellElement.textContent = cell.index
+				cellElement.onclick = () => tryClaiming(cell)
+				cellElement.classList.add('cell')
+				if (cell.owner === 1) cellElement.classList.add('p1')
+				if (cell.owner === 2) cellElement.classList.add('p2')
+
+				gridElement.appendChild(cellElement)
+
+				cell.element = cellElement
+			}
+
+			function tryClaiming(cell) {
+				if (cell.owner === 0) claim(cell)
+				else select(cell)
+			}
+
+			function claim(cell) {
+				cell.owner = match.turn
+				if (cell.owner === 1) {
+					cell.element.classList.add('p1')
+					cell.element.classList.remove('p2')
+				}
+				if (cell.owner === 2) {
+					cell.element.classList.remove('p1')
+					cell.element.classList.add('p2')
+				}
+
+				updateConnections(cell)
+				removeSurrounded(cell)
+
+				match.turn = match.turn === 1 ? 2 : 1
+
+				updateInfo()
+			}
+
+			function select(cell) {
+				if (selection?.index === cell.index) {
+					selection = undefined
+				} else {
+					selection = cell
+				}
+
+				highlight()
+			}
+
+			function highlight() {
+				if (!selection) {
+					for (const cell of match.grid.cells) {
+						cell.element.classList.remove('highlight')
+					}
+
+					return
+				}
+
+				const friends = findFriendGroup(selection.friends, [selection.index])
+				const spaces = friends.reduce(
+					(spaces, friend) => spaces.concat(match.grid.cells[friend].spaces),
+					[]
+				)
+				for (const space of spaces) {
+					match.grid.cells[space].element.classList.add('highlight')
+				}
+			}
+
+			function updateConnections(cell) {
+				for (const index of cell.connections) {
+					const connection = match.grid.cells[index]
+
+					if (connection.owner === 0) {
+						cell.spaces.push(index)
+					} else if (connection.owner === cell.owner) {
+						cell.friends.push(index)
+						connection.friends.push(cell.index)
+						connection.spaces = connection.spaces.filter((i) => i !== cell.index)
+					} else {
+						connection.spaces = connection.spaces.filter((i) => i !== cell.index)
+					}
+				}
+			}
+
+			function removeSurrounded(cell) {
+				for (const index of cell.connections) {
+					const connection = match.grid.cells[index]
+					if (
+						connection.owner === 0 ||
+						connection.owner === cell.owner ||
+						connection.spaces.length > 0
+					)
+						continue
+
+					const group = findFriendGroup(match, connection.friends, [connection.index])
+					if (group.some((member) => match.grid.cells[member].spaces.length > 0)) continue
+
+					for (const index of group) {
+						const capture = match.grid.cells[index]
+
+						for (const index of capture.connections) {
+							const connection = match.grid.cells[index]
+							if (connection.owner !== cell.owner) continue
+
+							connection.spaces.push(capture.index)
+						}
+
+						capture.owner = 0
+						capture.friends = []
+						capture.spaces = []
+						match.players[match.turn].captures += 1
+					}
+				}
+			}
+
+			function findFriendGroup(friends, group) {
+				if (friends.length === 0) return group
+
+				const [newFriend, ...updatedFriends] = friends
+				const additionalFriends = match.grid.cells[newFriend].friends.filter(
+					(friend) => !group.includes(friend)
+				)
+
+				return findFriendGroup(
+					updatedFriends.concat(additionalFriends),
+					group.concat(newFriend)
+				)
+			}
+
+			function updateInfo() {
+				turnElement.textContent = `P${match.turn}`
+				p1Element.textContent = `P1: ${match.players[1].name}`
+				p2Element.textContent = `P2: ${match.players[1].name}`
+
+				if (match.turn === 1) {
+					turnElement.classList.add('p1')
+					turnElement.classList.remove('p2')
+				}
+				if (match.turn === 2) {
+					turnElement.classList.remove('p1')
+					turnElement.classList.add('p2')
+				}
+			}
+
+			function generateMatch(size) {
+				return {
+					players: {
+						1: {
+							name: 'Anonymous',
+							type: 'Human',
+							captures: 0,
+						},
+						2: {
+							name: 'AI',
+							type: 'AI',
+							captures: 0,
+						},
+					},
+					grid: generateGrid(size),
+					turn: 1,
+				}
+			}
+
+			function generateGrid(size) {
+				const cells = []
+
+				for (let y = 0; y < size; y++) {
+					for (let x = 0; x < size; x++) {
+						cells.push({
+							index: generateIndex(x, y, size),
+							x,
+							y,
+							owner: 0,
+							connections: generateConnections(x, y, size),
+							friends: [],
+							spaces: [],
+						})
+					}
+				}
+
+				return { cells, size }
+			}
+
+			function generateConnections(x, y, size) {
+				const adjacents = []
+
+				if (y - 1 >= 0) adjacents.push(generateIndex(x, y - 1, size))
+				if (x + 1 <= size - 1) adjacents.push(generateIndex(x + 1, y, size))
+				if (y + 1 <= size - 1) adjacents.push(generateIndex(x, y + 1, size))
+				if (x - 1 >= 0) adjacents.push(generateIndex(x - 1, y, size))
+
+				return adjacents
+			}
+
+			function generateIndex(x, y, size) {
+				return x + y + y * (size - 1)
+			}
+		</script>
+	</body>
+</html>
