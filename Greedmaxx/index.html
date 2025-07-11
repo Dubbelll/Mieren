@@ -224,7 +224,7 @@
 					)
 						continue
 
-					const group = findFriendGroup(match, connection.friends, [connection.index])
+					const group = findFriendGroup(connection.friends, [connection.index])
 					if (group.some((member) => match.grid.cells[member].spaces.length > 0)) continue
 
 					for (const index of group) {
@@ -240,6 +240,7 @@
 						capture.owner = 0
 						capture.friends = []
 						capture.spaces = []
+						capture.element.classList.remove('p1', 'p2')
 						match.players[match.turn].captures += 1
 					}
 				}
