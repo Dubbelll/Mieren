@@ -132,7 +132,9 @@
 			}
 
 			function tryClaiming(cell) {
-				if (cell.owner === 0) claim(cell)
+				const friends = checkPotentialFriends(cell, match.turn)
+
+				if (cell.owner === 0 && friends.length !== 1) claim(cell)
 				else select(cell)
 			}
 
@@ -182,6 +184,18 @@
 				for (const space of spaces) {
 					match.grid.cells[space].element.classList.add('highlight')
 				}
+			}
+
+			function checkPotentialFriends(cell, turn) {
+				const friends = []
+
+				for (const index of cell.connections) {
+					const connection = match.grid.cells[index]
+
+					if (connection.owner === turn) friends.push(index)
+				}
+
+				return friends
 			}
 
 			function updateConnections(cell) {
