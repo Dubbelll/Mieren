@@ -105,7 +105,7 @@
 				}
 
 				&.unclaimable {
-					background-color: red;
+					background-color: lightgray;
 				}
 			}
 		</style>
@@ -120,20 +120,7 @@
 			let gridElement = document.getElementById('grid')
 
 			updateInfo()
-
-			for (const cell of match.grid.cells) {
-				const cellElement = document.createElement('button')
-
-				cellElement.textContent = cell.index
-				cellElement.onclick = () => tryClaiming(cell)
-				cellElement.classList.add('cell')
-				if (cell.owner === 1) cellElement.classList.add('p1')
-				if (cell.owner === 2) cellElement.classList.add('p2')
-
-				gridElement.appendChild(cellElement)
-
-				cell.element = cellElement
-			}
+			drawGrid()
 
 			function tryClaiming(cell) {
 				if (cell.owner === 0 && !cell.element.classList.contains('unclaimable')) claim(cell)
@@ -312,6 +299,22 @@
 					} else {
 						cell.element.classList.remove('unclaimable')
 					}
+				}
+			}
+
+			function drawGrid() {
+				for (const cell of match.grid.cells) {
+					const cellElement = document.createElement('button')
+
+					cellElement.textContent = cell.index
+					cellElement.onclick = () => tryClaiming(cell)
+					cellElement.classList.add('cell')
+					if (cell.owner === 1) cellElement.classList.add('p1')
+					if (cell.owner === 2) cellElement.classList.add('p2')
+
+					gridElement.appendChild(cellElement)
+
+					cell.element = cellElement
 				}
 			}
 
