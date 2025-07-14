@@ -142,6 +142,7 @@
 
 			function claim(cell) {
 				cell.owner = match.turn
+				match.players[match.turn].claims += 1
 				if (cell.owner === 1) {
 					cell.element.classList.add('p1')
 					cell.element.classList.remove('p2')
@@ -154,10 +155,25 @@
 				updateConnections(cell)
 				removeSurrounded(cell)
 
+				if (match.players[match.turn].claims > match.grid.cells.length / 2) {
+					alert(`P${match.turn} wins!`)
+					return
+				}
+
 				match.turn = match.turn === 1 ? 2 : 1
 
 				updateInfo()
 				updateClaimable()
+
+				const open = match.grid.cells.filter(
+					(cell) => cell.owner === 0 && !cell.element.classList.contains('unclaimable')
+				)
+				if (open.length === 0) {
+					const winner = match.players[1].claims > match.players[2].claims ? 1 : 2
+					alert(`P${winner} wins!`)
+					return
+				}
+				if (match.players[match.turn].type === 'AI') think()
 			}
 
 			function select(cell) {
@@ -187,6 +203,15 @@
 				for (const space of spaces) {
 					match.grid.cells[space].element.classList.add('highlight')
 				}
+			}
+
+			function think() {
+				const open = match.grid.cells.filter(
+					(cell) => cell.owner === 0 && !cell.element.classList.contains('unclaimable')
+				)
+				const random = Math.floor(Math.random() * (open.length - 0) + 0)
+
+				claim(open[random])
 			}
 
 			function checkPotentialFriends(cell, turn) {
@@ -243,6 +268,7 @@
 						capture.spaces = []
 						capture.element.classList.remove('p1', 'p2')
 						capture.element.classList.add(`p${match.turn}`)
+						match.players[match.turn].claims += 1
 						match.players[match.turn].captures += 1
 					}
 				}
@@ -263,8 +289,8 @@
 			}
 
 			function updateInfo() {
-				p1Element.textContent = `${match.players[1].captures}`
-				p2Element.textContent = `${match.players[2].captures}`
+				p1Element.textContent = `${match.players[1].claims}`
+				p2Element.textContent = `${match.players[2].claims}`
 				turnElement.textContent = `P${match.turn}`
 
 				if (match.turn === 1) {
@@ -295,11 +321,13 @@
 						1: {
 							name: 'Anonymous',
 							type: 'Human',
+							claims: 0,
 							captures: 0,
 						},
 						2: {
 							name: 'AI',
 							type: 'AI',
+							claims: 0,
 							captures: 0,
 						},
 					},
