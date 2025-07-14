@@ -103,6 +103,10 @@
 				&.highlight {
 					background-color: cyan;
 				}
+
+				&.unclaimable {
+					background-color: red;
+				}
 			}
 		</style>
 
@@ -132,9 +136,7 @@
 			}
 
 			function tryClaiming(cell) {
-				const friends = checkPotentialFriends(cell, match.turn)
-
-				if (cell.owner === 0 && friends.length !== 1) claim(cell)
+				if (cell.owner === 0 && !cell.element.classList.contains('unclaimable')) claim(cell)
 				else select(cell)
 			}
 
@@ -155,6 +157,7 @@
 				match.turn = match.turn === 1 ? 2 : 1
 
 				updateInfo()
+				updateClaimable()
 			}
 
 			function select(cell) {
@@ -202,9 +205,7 @@
 				for (const index of cell.connections) {
 					const connection = match.grid.cells[index]
 
-					if (connection.owner === 0) {
-						cell.spaces.push(index)
-					} else if (connection.owner === cell.owner) {
+					if (connection.owner === cell.owner) {
 						cell.friends.push(index)
 						connection.friends.push(cell.index)
 						connection.spaces = connection.spaces.filter((i) => i !== cell.index)
@@ -237,10 +238,11 @@
 							connection.spaces.push(capture.index)
 						}
 
-						capture.owner = 0
+						capture.owner = match.turn
 						capture.friends = []
 						capture.spaces = []
 						capture.element.classList.remove('p1', 'p2')
+						capture.element.classList.add(`p${match.turn}`)
 						match.players[match.turn].captures += 1
 					}
 				}
@@ -275,6 +277,18 @@
 				}
 			}
 
+			function updateClaimable() {
+				for (const cell of match.grid.cells) {
+					const friends = checkPotentialFriends(cell, match.turn)
+
+					if (cell.owner === 0 && friends.length === 1) {
+						cell.element.classList.add('unclaimable')
+					} else {
+						cell.element.classList.remove('unclaimable')
+					}
+				}
+			}
+
 			function generateMatch(size) {
 				return {
 					players: {
@@ -306,7 +320,7 @@
 							owner: 0,
 							connections: generateConnections(x, y, size),
 							friends: [],
-							spaces: [],
+							spaces: generateConnections(x, y, size),
 						})
 					}
 				}
