@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="shortcut icon" href="data:," />
+		<title>BertaChess</title>
+	</head>
+	<body>
+		<div id="app">
+			<div id="player1" class="player player1">
+				<p class="name">P1</p>
+			</div>
+			<div id="board"></div>
+			<div id="player2" class="player player2">
+				<p class="name">P2</p>
+			</div>
+		</div>
+
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+				font-family: Supreme;
+				font-size: 16px;
+			}
+
+			:root {
+				--black1: #0c0c0c;
+				--white1: #f2f2f2;
+			}
+
+			body {
+				display: flex;
+				justify-content: center;
+			}
+
+			#app {
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				gap: 8px;
+				width: 100svmin;
+				height: 100svh;
+				padding: 16px;
+			}
+
+			.player {
+				display: flex;
+
+				&.player1 {
+					justify-content: end;
+
+					& .name {
+						background-color: yellow;
+					}
+				}
+
+				&.player2 {
+					justify-content: start;
+
+					& .name {
+						background-color: magenta;
+					}
+				}
+			}
+
+			.name {
+				padding: 8px;
+			}
+
+			#board {
+				display: grid;
+				gap: 4px;
+				aspect-ratio: 1;
+				background-color: black;
+				border: 4px solid black;
+			}
+
+			@media (orientation: portrait) {
+				#board {
+					width: 100%;
+				}
+			}
+
+			@media (orientation: landscape) {
+				#board {
+					flex: 1;
+				}
+			}
+
+			.cell {
+				position: relative;
+				display: flex;
+				aspect-ratio: 1;
+				background-color: white;
+				border: none;
+
+				&.player1 {
+					background-color: yellow;
+				}
+
+				&.player2 {
+					background-color: magenta;
+				}
+
+				&.highlight {
+					background-color: cyan;
+				}
+			}
+		</style>
+
+		<script>
+			let match = generateMatch(7)
+			let selection = undefined
+
+			let player1Element = document.getElementById('player1')
+			let player2Element = document.getElementById('player2')
+			let boardElement = document.getElementById('board')
+
+			drawBoard()
+
+			function select(cell) {
+				if (selection?.index === cell.index) {
+					selection = undefined
+				} else {
+					selection = cell
+				}
+			}
+
+			function drawBoard() {
+				boardElement.style.gridTemplateColumns = `repeat(${match.size}, 1fr)`
+
+				for (const cell of match.board) {
+					const cellElement = document.createElement('button')
+
+					cellElement.textContent = cell.index
+					cellElement.onclick = () => select(cell)
+					cellElement.classList.add('cell')
+
+					boardElement.appendChild(cellElement)
+
+					cell.element = cellElement
+				}
+			}
+
+			function generateMatch(size) {
+				const player1 = {
+					name: 'Anonymous',
+					type: 'Human',
+					captures: 0,
+				}
+				const player2 = {
+					name: 'Anonymous',
+					type: 'Human',
+					captures: 0,
+				}
+
+				return {
+					player1,
+					player2,
+					turn: player1,
+					board: generateBoard(size),
+					size,
+				}
+			}
+
+			function generateBoard(size) {
+				const cells = []
+
+				for (let y = 0; y < size; y++) {
+					for (let x = 0; x < size; x++) {
+						cells.push({
+							x,
+							y,
+							index: generateIndex(x, y, size),
+							unit: undefined,
+						})
+					}
+				}
+
+				return cells
+			}
+
+			function generateIndex(x, y, size) {
+				return x + y + y * (size - 1)
+			}
+		</script>
+	</body>
+</html>
