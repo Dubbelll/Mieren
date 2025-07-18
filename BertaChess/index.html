@@ -72,6 +72,7 @@
 
 			#board {
 				display: grid;
+				grid-template-columns: repeat(7, 1fr);
 				gap: 4px;
 				aspect-ratio: 1;
 				background-color: black;
@@ -93,6 +94,8 @@
 			.cell {
 				position: relative;
 				display: flex;
+				align-items: center;
+				justify-content: center;
 				aspect-ratio: 1;
 				background-color: white;
 				border: none;
@@ -112,7 +115,70 @@
 		</style>
 
 		<script>
-			let match = generateMatch(7)
+			class Unit {
+				constructor(player, distancePerMove, maxMoveDistance) {
+					this.player = player
+					this.distancePerMove = distancePerMove
+					this.maxMoveDistance = maxMoveDistance
+				}
+
+				select(cell) {
+					return { moves: [], captures: [] }
+				}
+			}
+
+			class Shielder extends Unit {
+				constructor(player) {
+					super(player, 1, 1)
+				}
+
+				select(cell) {
+					return { moves: [], captures: [] }
+				}
+			}
+
+			class Sniper extends Unit {
+				constructor(player) {
+					super(player, 1, 1)
+					this.aim = undefined
+				}
+
+				select(cell) {
+					return { moves: [], captures: [] }
+				}
+			}
+
+			class Grappler extends Unit {
+				constructor(player) {
+					super(player, 1, 1)
+				}
+
+				select(cell) {
+					return { moves: [], captures: [] }
+				}
+			}
+
+			class Sprinter extends Unit {
+				constructor(player) {
+					super(player, 2, 2)
+				}
+
+				select(cell) {
+					return { moves: [], captures: [] }
+				}
+			}
+
+			class Hopper extends Unit {
+				constructor(player) {
+					super(player, 1, 2)
+				}
+
+				select(cell) {
+					return { moves: [], captures: [] }
+				}
+			}
+
+			const match = generateMatch()
 			let selection = undefined
 
 			let player1Element = document.getElementById('player1')
@@ -135,9 +201,13 @@
 				for (const cell of match.board) {
 					const cellElement = document.createElement('button')
 
-					cellElement.textContent = cell.index
+					cellElement.textContent = cell.unit
+						? cell.unit.constructor.name
+						: cell.index.toString()
 					cellElement.onclick = () => select(cell)
 					cellElement.classList.add('cell')
+					if (cell.unit?.player === match.player1) cellElement.classList.add('player1')
+					if (cell.unit?.player === match.player2) cellElement.classList.add('player2')
 
 					boardElement.appendChild(cellElement)
 
@@ -145,7 +215,7 @@
 				}
 			}
 
-			function generateMatch(size) {
+			function generateMatch() {
 				const player1 = {
 					name: 'Anonymous',
 					type: 'Human',
@@ -161,22 +231,33 @@
 					player1,
 					player2,
 					turn: player1,
-					board: generateBoard(size),
-					size,
+					board: generateBoard(player1, player2),
 				}
 			}
 
-			function generateBoard(size) {
+			function generateBoard(player1, player2) {
+				const size = 7 // rows x columns
 				const cells = []
+				const player1Units = generateUnits(player1)
+				const player2Units = generateUnits(player2).reverse()
 
 				for (let y = 0; y < size; y++) {
 					for (let x = 0; x < size; x++) {
-						cells.push({
+						const cell = {
 							x,
 							y,
 							index: generateIndex(x, y, size),
-							unit: undefined,
-						})
+						}
+
+						if (y === 0) {
+							cell.unit = player1Units[x]
+						} else if (y === size - 1) {
+							cell.unit = player2Units[x]
+						} else {
+							cell.unit = undefined
+						}
+
+						cells.push(cell)
 					}
 				}
 
@@ -185,6 +266,18 @@
 
 			function generateIndex(x, y, size) {
 				return x + y + y * (size - 1)
+			}
+
+			function generateUnits(player) {
+				return [
+					new Hopper(player),
+					new Sprinter(player),
+					new Grappler(player),
+					new Shielder(player),
+					new Sniper(player),
+					new Sprinter(player),
+					new Hopper(player),
+				]
 			}
 		</script>
 	</body>
