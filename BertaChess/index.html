@@ -145,6 +145,12 @@
 					selection = undefined
 				} else {
 					selection = cell
+					if (selection.unit === undefined) return
+
+					const targets = selection.unit.select(selection, match)
+					for (const target of targets.moves) {
+						target.element.classList.add('highlight')
+					}
 				}
 			}
 
@@ -167,6 +173,7 @@
 			}
 
 			function generateMatch() {
+				const size = 7 // rows x columns
 				const player1 = {
 					name: 'Anonymous',
 					type: 'Human',
@@ -179,15 +186,15 @@
 				}
 
 				return {
+					size,
 					player1,
 					player2,
 					turn: player1,
-					board: generateBoard(player1, player2),
+					board: generateBoard(size, player1, player2),
 				}
 			}
 
-			function generateBoard(player1, player2) {
-				const size = 7 // rows x columns
+			function generateBoard(size, player1, player2) {
 				const cells = []
 				const player1Units = generateUnits(player1)
 				const player2Units = generateUnits(player2).reverse()
@@ -237,8 +244,21 @@
 					type: unitTypes.protector,
 					distancePerMove: 1,
 					maxMoveDistance: 1,
-					select: (cell) => {
-						return { moves: [], captures: [] }
+					select: (cell, match) => {
+						const y = cell.unit.player === match.player1 ? cell.y + 1 : cell.y - 1
+						const targets = [
+							match.board[generateIndex(cell.x - 1, y, match.size)],
+							match.board[generateIndex(cell.x, y, match.size)],
+							match.board[generateIndex(cell.x + 1, y, match.size)],
+						]
+
+						return {
+							moves: targets.filter((target) => target && target.unit === undefined),
+							captures: targets.filter(
+								(target) =>
+									target && target.unit && target.unit.player !== cell.unit.player
+							),
+						}
 					},
 				}
 			}
