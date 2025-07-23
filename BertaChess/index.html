@@ -39,7 +39,6 @@
 			#app {
 				display: flex;
 				flex-direction: column;
-				justify-content: center;
 				gap: 8px;
 				width: 100svmin;
 				height: 100svh;
@@ -48,6 +47,7 @@
 
 			.player {
 				display: flex;
+				width: 100%;
 
 				&.player1 {
 					justify-content: end;
@@ -79,18 +79,6 @@
 				border: 4px solid black;
 			}
 
-			@media (orientation: portrait) {
-				#board {
-					width: 100%;
-				}
-			}
-
-			@media (orientation: landscape) {
-				#board {
-					flex: 1;
-				}
-			}
-
 			.cell {
 				position: relative;
 				display: flex;
@@ -112,70 +100,35 @@
 					background-color: cyan;
 				}
 			}
+
+			@media (orientation: portrait) {
+				#app {
+					justify-content: center;
+				}
+
+				#board {
+					width: 100%;
+				}
+			}
+
+			@media (orientation: landscape) {
+				#app {
+					align-items: center;
+				}
+
+				#board {
+					flex: 1;
+				}
+			}
 		</style>
 
 		<script>
-			class Unit {
-				constructor(player, distancePerMove, maxMoveDistance) {
-					this.player = player
-					this.distancePerMove = distancePerMove
-					this.maxMoveDistance = maxMoveDistance
-				}
-
-				select(cell) {
-					return { moves: [], captures: [] }
-				}
-			}
-
-			class Shielder extends Unit {
-				constructor(player) {
-					super(player, 1, 1)
-				}
-
-				select(cell) {
-					return { moves: [], captures: [] }
-				}
-			}
-
-			class Sniper extends Unit {
-				constructor(player) {
-					super(player, 1, 1)
-					this.aim = undefined
-				}
-
-				select(cell) {
-					return { moves: [], captures: [] }
-				}
-			}
-
-			class Grappler extends Unit {
-				constructor(player) {
-					super(player, 1, 1)
-				}
-
-				select(cell) {
-					return { moves: [], captures: [] }
-				}
-			}
-
-			class Sprinter extends Unit {
-				constructor(player) {
-					super(player, 2, 2)
-				}
-
-				select(cell) {
-					return { moves: [], captures: [] }
-				}
-			}
-
-			class Hopper extends Unit {
-				constructor(player) {
-					super(player, 1, 2)
-				}
-
-				select(cell) {
-					return { moves: [], captures: [] }
-				}
+			const unitTypes = {
+				protector: 'protector',
+				sniper: 'sniper',
+				grappler: 'grappler',
+				sprinter: 'sprinter',
+				hopper: 'hopper',
 			}
 
 			const match = generateMatch()
@@ -201,9 +154,7 @@
 				for (const cell of match.board) {
 					const cellElement = document.createElement('button')
 
-					cellElement.textContent = cell.unit
-						? cell.unit.constructor.name
-						: cell.index.toString()
+					cellElement.textContent = cell.unit ? cell.unit.type : cell.index.toString()
 					cellElement.onclick = () => select(cell)
 					cellElement.classList.add('cell')
 					if (cell.unit?.player === match.player1) cellElement.classList.add('player1')
@@ -270,14 +221,75 @@
 
 			function generateUnits(player) {
 				return [
-					new Hopper(player),
-					new Sprinter(player),
-					new Grappler(player),
-					new Shielder(player),
-					new Sniper(player),
-					new Sprinter(player),
-					new Hopper(player),
+					generateHopper(player),
+					generateSprinter(player),
+					generateGrappler(player),
+					generateProtector(player),
+					generateSniper(player),
+					generateSprinter(player),
+					generateHopper(player),
 				]
+			}
+
+			function generateProtector(player) {
+				return {
+					player,
+					type: unitTypes.protector,
+					distancePerMove: 1,
+					maxMoveDistance: 1,
+					select: (cell) => {
+						return { moves: [], captures: [] }
+					},
+				}
+			}
+
+			function generateSniper(player) {
+				return {
+					player,
+					type: unitTypes.sniper,
+					distancePerMove: 1,
+					maxMoveDistance: 1,
+					aim: undefined,
+					select: (cell) => {
+						return { moves: [], captures: [] }
+					},
+				}
+			}
+
+			function generateGrappler(player) {
+				return {
+					player,
+					type: unitTypes.grappler,
+					distancePerMove: 1,
+					maxMoveDistance: 4,
+					select: (cell) => {
+						return { moves: [], captures: [] }
+					},
+				}
+			}
+
+			function generateSprinter(player) {
+				return {
+					player,
+					type: unitTypes.sprinter,
+					distancePerMove: 2,
+					maxMoveDistance: 2,
+					select: (cell) => {
+						return { moves: [], captures: [] }
+					},
+				}
+			}
+
+			function generateHopper(player) {
+				return {
+					player,
+					type: unitTypes.hopper,
+					distancePerMove: 1,
+					maxMoveDistance: 2,
+					select: (cell) => {
+						return { moves: [], captures: [] }
+					},
+				}
 			}
 		</script>
 	</body>
