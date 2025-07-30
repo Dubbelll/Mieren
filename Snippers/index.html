@@ -5,18 +5,98 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<link rel="stylesheet" href="index.css" />
 		<link rel="shortcut icon" href="data:," />
-		<title>Snippers - $title$</title>
+		<title>Snippers</title>
 	</head>
 	<body>
-		<header>
-			<a id="logo" href="/">Snippers</a>
-			<h1>$title$</h1>
-			<p class="brackets">$timestamp$</p>
-		</header>
-		<main>$body$</main>
-		<footer>
-			<p class="parentheses">$date$</p>
-			<a href="https://github.com/Dubbelll">GitHub</a>
-		</footer>
+		<div id="app">
+			<div id="years"></div>
+		</div>
+
+		<style>
+			body {
+				display: flex;
+				justify-content: center;
+			}
+
+			#years {
+				display: flex;
+				justify-content: center;
+				flex-wrap: wrap;
+				gap: 16px;
+			}
+
+			.year {
+				display: flex;
+				gap: 8px;
+				height: 100svh;
+				padding: 16px 0;
+			}
+
+			.number {
+				writing-mode: sideways-lr;
+				text-align: end;
+			}
+
+			.grid {
+				display: grid;
+				grid-template-columns: repeat(7, 1fr);
+				grid-template-rows: repeat(53, 1fr);
+				gap: 4px;
+			}
+
+			.cell {
+				width: calc((100svh - 32px - (52 * 4px)) / 53);
+				aspect-ratio: 1;
+				background-color: var(--text);
+			}
+		</style>
+
+		<script>
+			const years = [2025, 2024]
+			const yearsElement = document.getElementById('years')
+
+			for (const year of years) {
+				drawYear(year)
+			}
+
+			function drawYear(year) {
+				const yearElement = document.createElement('div')
+				yearElement.className = 'year'
+				yearsElement.appendChild(yearElement)
+
+				const numberElement = document.createElement('div')
+				numberElement.className = 'number'
+				numberElement.textContent = year
+				yearElement.appendChild(numberElement)
+
+				const gridElement = document.createElement('div')
+				gridElement.className = 'grid'
+				yearElement.appendChild(gridElement)
+
+				for (let month = 11; month >= 0; month--) {
+					const daysInMonth = new Date(year, month + 1, 0).getDate()
+					for (let day = daysInMonth; day > 0; day--) {
+						const paddedMonth = (month + 1).toString().padStart(2, '0')
+						const paddedDay = day.toString().padStart(2, '0')
+
+						const cellElement = document.createElement('div')
+						cellElement.className = 'cell'
+						cellElement.title = year + paddedMonth + paddedDay
+						gridElement.appendChild(cellElement)
+					}
+				}
+
+				requestAnimationFrame(() => {
+					const columns = 7
+					const rows = 53
+					const gap = 4
+					const gridHeight = gridElement.getBoundingClientRect().height
+					const cellSize = (gridHeight - gap * (rows - 1)) / rows
+					const gridWidth = cellSize * columns + gap * (columns - 1)
+
+					console.log(gridWidth, gridHeight, gridWidth / gridHeight)
+				})
+			}
+		</script>
 	</body>
 </html>
