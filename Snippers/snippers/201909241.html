@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="stylesheet" href="../index.css" />
+		<link rel="stylesheet" href="../templates/snipper.css" />
+		<link rel="shortcut icon" href="data:," />
+		<title>On compilers &amp; their psychological superpowers</title>
+	</head>
+
+	<body>
+		<div id="snipper">
+			<header>
+				<h1 id="title">On compilers &amp; their psychological superpowers</h1>
+				<div id="timestamp">201909241</div>
+			</header>
+			<main>
+				<p>
+					I often think about the idea that there is only so much you can care about. Some
+					people describe this as the amount of fucks they have to give, which is usually
+					a finite amount. As the years in my (short) career go on, I've increasingly felt
+					the relevance of this concept in software development.
+				</p>
+				<p>
+					While they are only part of the puzzle, I believe that compilers and type
+					systems can offload a significant amount of concerns that take up valuable time
+					and energy. Instead of having to think about everything that can go wrong, they
+					let you focus on building features and adding value to the product.
+				</p>
+				<p>
+					To make this theory more concrete, I'll be talking about my favourite
+					programming language: Elm. It is by no means the only language that can
+					illustrate my point, but I am comfortable with it and believe that it will aptly
+					show what can be gained.
+				</p>
+				<h2>Building blocks</h2>
+				<p>
+					Somewhat surprisingly, the possible reduction in mental strain can already be
+					seen in Elm's most basic building blocks. The first thing you have to do when
+					writing a new function, is coming up with its type signature.
+				</p>
+				<code>
+					multiply : Int -&gt; Int -&gt; Int
+					<br />
+					multiply a b = a * b
+				</code>
+				<p>
+					This type signature says that multiply takes two integers and returns an
+					integer. Thanks to the compiler, you can be completely sure that when this
+					function is called, that's exactly what will happen. If anyone tries to misuse
+					it, like giving it a float instead of an integer, it will be caught at compile
+					time.
+				</p>
+				<code>
+					— TYPE MISMATCH —
+					<br />
+					The 1st argument to `multiply` is not what I expect:
+					<br />
+					<br />
+					7 | multiply 2.5 2
+					<br />
+					<br />
+					This argument is a float of type:
+					<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;Float
+					<br />
+					But `multiply` needs the 1st argument to be:
+					<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;Int
+					<br />
+					<br />
+					Note: Read &lt;https://elm-lang.org/0.19.1/implicit-casts&gt; to learn why Elm
+					does not implicitly convert Ints to Floats.
+					<br />
+					Use toFloat and round to do explicit conversions.
+				</code>
+				<p>
+					Not only will it be caught, the compiler will tell us what is wrong, what we can
+					do to fix it and (sometimes) even why it behaves that way, all in a friendly and
+					clear message.
+				</p>
+				<p>
+					By front loading important questions and having the type system and compiler to
+					back up your decisions, you don't have to think about a whole category of
+					possible problems afterwards. No more “What if one of the arguments is null?”,
+					“What happens when George accidentally sends it an array?”, “What is the type of
+					the output”?, not even the whimsical “Will it always have the same type of
+					output?”.
+				</p>
+				<h2>A case for iteration</h2>
+				<p>
+					One part of software development where compilers and type systems can really
+					shine is during refactoring. I think most people would agree that being able to
+					iterate often and without fear can play a big part in successful development
+					cycles.
+				</p>
+				<p>
+					Let's say that we have a simple custom type called Vegetable that can be either
+					a Carrot or a Cucumber and a transformer function that uses a case statement to
+					turn a Vegetable into a String.
+				</p>
+				<code>
+					type Vegetable
+					<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;= Carrot
+					<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;| Cucumber
+					<br />
+					<br />
+					vegetableToString : Vegetable -&gt; String
+					<br />
+					vegetableToString vegetable =
+					<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;case vegetable of
+					<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Carrot -&gt; "Carrot"
+					<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cucumber -&gt; "Cucumber"
+				</code>
+				<p>
+					We notice, however, that our Vegetable type is quite limited, so we quickly add
+					another one to it.
+				</p>
+				<code>
+					type Vegetable
+					<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;= Carrot
+					<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;| Cucumber
+					<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;| Cabbage
+				</code>
+				<p>
+					When we try to compile our code, the compiler will not be happy because we
+					haven't added a branch for Cabbage to our vegetableToString function.
+					Thankfully, it'll guide us towards fool proofing our program once again.
+				</p>
+				<code>
+					— MISSING PATTERNS —
+					<br />
+					This `case` does not have branches for all possibilities:
+					<br />
+					<br />
+					13| case vegetable of
+					<br />
+					14| &nbsp;&nbsp;&nbsp;&nbsp;Carrot -&gt; "Carrot"
+					<br />
+					15| &nbsp;&nbsp;&nbsp;&nbsp;Cucumber -&gt; "Cucumber"
+					<br />
+					<br />
+					Missing possibilities include:
+					<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;Cabbage
+					<br />
+					<br />
+					I would have to crash if I saw one of those. Add branches for them!
+					<br />
+					<br />
+					Hint: If you want to write the code for each branch later, use `Debug.todo` as a
+					placeholder.
+					<br />
+					Read &lt;https://elm-lang.org/0.19.1/missing-patterns&gt; for more guidance on
+					this workflow.
+				</code>
+				<p>
+					Safeguards like these can take away a lot of uncertainties that come with
+					refactoring and allow you to make sweeping changes without batting an eye.
+					Sometimes it may feel like you are fighting the compiler, but if you look at it
+					from a different perspective it's more akin to a designated driver: a shining
+					force of reason guiding you through the chaos.
+				</p>
+				<h2>Opening the door to strangers</h2>
+				<p>
+					Taking it one step further, let's imagine that our vegetable comes as the result
+					of an HTTP call to a server. We know what the response should look like, but
+					since we don't know when that might change and keeping in mind that our request
+					can always fail, we're not guaranteed to get what we asked for.
+				</p>
+				<p>
+					In a lot of languages this is handled by the null concept, which thankfully does
+					not exist in Elm. Instead, it has the Maybe type (a.k.a Option(al)), which
+					forces you to always consider that there might be nothing to work with.
+				</p>
+				<code>
+					vegetableToString : Maybe Vegetable -&gt; String
+					<br />
+					vegetableToString vegetable =
+					<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;case vegetable of
+					<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Just v -&gt;
+					<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case v
+					of
+					<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Carrot
+					-&gt; "Carrot"
+					<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cucumber
+					-&gt; "Cucumber"
+					<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cabbage
+					-&gt; "Cabbage"
+					<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nothing -&gt;
+					<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Unknown"
+				</code>
+				<p>
+					By changing our vegetable's type to Maybe Vegetable, we must deal with the fact
+					that it might not be there. Once we do, it's business as usual. Of course it's
+					not advisable to use Maybe all over the place, but when it's necessary it can be
+					a powerful ally.
+				</p>
+				<p>
+					You'll probably run into Maybe quite early in your Elm experience, as it is used
+					to solve problems such as using an index to retrieve an item from an array that
+					may or may not exist. It may frustrate you, it adds boilerplate and it feels
+					weird at first, but it frees your mind of an enormous burden. Let's appreciate
+					that for a moment: a world without null and undefined!
+				</p>
+				<h2>Nobody cares</h2>
+				<p>
+					Of course not everyone will care. In fact, looking at what's currently popular
+					and what I've personally experienced, most people don't. Some simply don't think
+					about software development that way. They never experience all the uncertainty,
+					unknowns and what-ifs eating away their productive thoughts. It's as if someone
+					in a meeting room shouts “Isn't that noise driving you crazy?!” and they respond
+					with “What noise?”. Others might argue that the problems and concerns eliminated
+					by type systems and compilers are not significant and that they could either
+					just fix those problems when they occur, or proactively defend against them.
+				</p>
+				<p>
+					However envious I may sometimes feel of these types of people, this post is
+					obviously not for them. If you're anything like me, you do often experience
+					those worries and fret about everything that could go wrong. Whatever the case
+					may be, I sincerely hope more people will start seeing the value of clear and
+					friendly error messages, great type systems and fantastic compilers. I truly
+					believe we could be building better software and having less frustrating
+					experiences as developers, even though there is currently little financial
+					incentive to do so.
+				</p>
+				<p>
+					So, should you ever feel like you're running out of fucks, just know that there
+					are tools out there to help you recover some. Even if you don't, you might be
+					surprised by the different perspective they can offer and the shift in focus
+					they might provide. While most people don't care, it can still be worthwhile to
+					explore what's out there. Be warned though, it may be hard to go back.
+				</p>
+			</main>
+		</div>
+	</body>
+</html>
